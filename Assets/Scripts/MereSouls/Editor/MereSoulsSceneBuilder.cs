@@ -25,10 +25,15 @@ public static class MereSoulsSceneBuilder
         // 南側の射撃区画の床に立たせる。床はY=-1.8、PlayerRootの原点は足元。
         GameObject playerRoot = FPSBaseAutoSetupEditor.BuildPlayer(weapons, new Vector3(1f, -1.75f, -1f));
 
+        playerRoot.AddComponent<FPSSoldierCondition>();
+        playerRoot.AddComponent<FPSConditionOverlay>();
+
         Selection.activeGameObject = playerRoot;
         Debug.Log("✅ [MERE SOULS] 塹壕セクターを構築しました。\n" +
-                  "床に立つと胸壁の0.75m下で外が見えません。火点(0.76m)に上がると覗けます。" +
-                  "現状は火点への昇降が素体のVault(Space+前進)頼りなので、専用の昇降動作は次の作業です。");
+                  "・床に立つと胸壁の0.75m下で外が見えません。火点(0.76m)に上がり、銃眼の正面からだけ覗けます。\n" +
+                  "・走り続けると疲労が溜まり、息が上がって照準がぶれます(数値は出ません。音と手元で判断してください)。\n" +
+                  "・Hキーで被弾すると恐怖と負傷が入り、視界が狭まって装填をしくじるようになります。\n" +
+                  "・火点への昇降は現状まだ素体のVault(Space+前進)頼りです。");
     }
 }
 #endif

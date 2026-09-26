@@ -61,6 +61,18 @@ public class UniversalFPSController : MonoBehaviour
     public Vector3 hipWeaponPos = new Vector3(0.2f, -0.22f, 0.4f);
     public Vector3 adsWeaponPos = new Vector3(0.0f, -0.14f, 0.35f);
 
+    // === 8. 外部の状態システムからの補正 ===
+    // 素体はこれらの数値の由来を知らない。3ステータスのようなゲーム固有の仕組みが
+    // 毎フレーム書き込む前提で、素体を単体で使う場合は既定値のまま何も起きない。
+    [HideInInspector] public float conditionSwayMultiplier = 1f;
+    [HideInInspector] public float conditionSpeedMultiplier = 1f;
+    [HideInInspector] public float conditionTremor = 0f;
+    [HideInInspector] public float conditionReloadTimeMultiplier = 1f;
+    [HideInInspector] public float conditionReloadFumbleChance = 0f;
+    [HideInInspector] public float conditionBreathlessness = 0f;
+    [HideInInspector] public Vector3 conditionWeaponPosOffset;
+    [HideInInspector] public Vector3 conditionWeaponRotOffset;
+
     // --- イベント通知 ---
     public System.Action<Vector3, Vector3, int, bool> OnBulletHit;
     public System.Action<FPSWeaponData> OnWeaponFired;
@@ -68,6 +80,10 @@ public class UniversalFPSController : MonoBehaviour
     public System.Action<bool> OnVaultTriggered;
     public System.Action<float> OnLanded;
     public System.Action<bool> OnReloadStarted;
+    public System.Action OnReloadFumbled;
+
+    /// <summary>被弾の唯一の入口。負傷などゲーム固有の処理はこれを購読して実装する。</summary>
+    public System.Action<Vector3, float> OnDamageTaken;
 
     // --- 公開プロパティ (テレメトリHUD用) ---
     public StanceState CurrentStance => currentStance;
@@ -97,6 +113,7 @@ public class UniversalFPSController : MonoBehaviour
     private bool isSliding;
     private bool isVaulting;
     private bool isReloading;
+    private bool reloadAborted;
     private bool isHoldingBreath;
     private bool isSupineProne;
 
@@ -187,7 +204,7 @@ public class UniversalFPSController : MonoBehaviour
 
         // 8の字呼吸スウェイ ＆ Shift息止め
         FPSWeaponData wp = ActiveWeapon;
-        float breathAmt = (wp != null ? wp.breathSwayAmount : 0.2f) * adsWeight;
+        float breathAmt = (wp != null ? wp.breathSwayAmount : 0.2f) * adsWeight * conditionSwayMultiplier;
         isHoldingBreath = adsWeight > 0.7f && Input.GetKey(KeyCode.LeftShift) && breathStamina > 0.1f;
 
         if (isHoldingBreath)
@@ -355,6 +372,8 @@ public class UniversalFPSController : MonoBehaviour
             else if (currentStance == StanceState.Prone)
                 targetSpeed = proneSpeed;
 
+            targetSpeed *= conditionSpeedMultiplier;
+
             if (isGrounded)
             {
                 horizontalVelocity = Vector3.MoveTowards(horizontalVelocity, wishDir * targetSpeed,
@@ -491,39 +510,88 @@ public class UniversalFPSController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 装填は2段階に分かれ、どちらで中断されたかで結果が変わる。
+    /// 前半で止まればクリップは銃に入っておらず一発も増えず、後半で止まれば半分だけ入る。
+    /// 震える手ではクリップを取り落とし、拾い直す間ずっと無防備になる。
+    /// </summary>
     private IEnumerator ReloadRoutine(FPSWeaponData wp, bool isTactical)
     {
         isReloading = true;
+        reloadAborted = false;
         OnReloadStarted?.Invoke(isTactical);
 
-        float duration = isTactical ? wp.tacticalReloadTime : wp.emptyReloadTime;
+        float duration = (isTactical ? wp.tacticalReloadTime : wp.emptyReloadTime) * conditionReloadTimeMultiplier;
+
         weaponPosSpring.AddImpulse(new Vector3(-0.15f, -0.55f, -0.1f));
         weaponRotSpring.AddImpulse(new Vector3(35f, -25f, 40f));
 
-        yield return new WaitForSeconds(duration * 0.65f);
+        yield return ReloadWait(duration * 0.65f);
+        if (reloadAborted) { EndReload(0); yield break; }
+
+        if (Random.value < conditionReloadFumbleChance)
+        {
+            OnReloadFumbled?.Invoke();
+            weaponPosSpring.AddImpulse(new Vector3(0.12f, -0.35f, 0f));
+            weaponRotSpring.AddImpulse(new Vector3(-32f, 22f, -38f));
+
+            yield return ReloadWait(0.9f);
+            if (reloadAborted) { EndReload(0); yield break; }
+        }
 
         weaponPosSpring.AddImpulse(new Vector3(0.05f, 0.45f, 0.1f));
         weaponRotSpring.AddImpulse(new Vector3(-25f, 10f, -20f));
         cameraLandSpring.AddImpulse(new Vector3(0f, 0.15f, 0f));
 
-        yield return new WaitForSeconds(duration * 0.35f);
+        yield return ReloadWait(duration * 0.35f);
+        if (reloadAborted) { EndReload(wp.magCapacity / 2); yield break; }
 
-        slotAmmo[currentWeaponIndex] = wp.magCapacity + (isTactical && wp.supportsChamberPlusOne ? 1 : 0);
+        EndReload(wp.magCapacity + (isTactical && wp.supportsChamberPlusOne ? 1 : 0));
+    }
+
+    private IEnumerator ReloadWait(float seconds)
+    {
+        float elapsed = 0f;
+        while (elapsed < seconds && !reloadAborted)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    /// <summary>中断しても、もともと入っていた弾まで減ることはない。散らばるのは装填中のクリップだけ。</summary>
+    private void EndReload(int roundsLoaded)
+    {
+        slotAmmo[currentWeaponIndex] = Mathf.Max(slotAmmo[currentWeaponIndex], roundsLoaded);
         isReloading = false;
+        reloadAborted = false;
     }
 
     public void ApplyDamageAimPunch(Vector3 incomingDir, float intensity = 1.0f)
     {
+        // 装填中に撃たれれば手元が飛ぶ。クリップは散らばり、入りかけの弾は失われる。
+        if (isReloading) reloadAborted = true;
+
         float side = Vector3.Dot(transform.right, incomingDir);
         aimPunchSpring.AddImpulse(new Vector3(-18f * intensity, side * 14f * intensity, -side * 22f * intensity));
         cameraLandSpring.AddImpulse(new Vector3(0f, -0.35f * intensity, 0f));
         weaponRotSpring.AddImpulse(new Vector3(-20f * intensity, 12f * intensity, 18f * intensity));
+
+        OnDamageTaken?.Invoke(incomingDir, intensity);
     }
 
     private void HandleWeaponFiring(float dt)
     {
         FPSWeaponData wp = ActiveWeapon;
-        if (wp == null || wp.fireMode == FireMode.Unarmed || isReloading) return;
+        if (wp == null || wp.fireMode == FireMode.Unarmed) return;
+
+        if (isReloading)
+        {
+            // 装填中に撃とうとすると、そこで切り上げてしまう。急いだ分だけ弾は入っていない。
+            if (Input.GetMouseButtonDown(0)) reloadAborted = true;
+            return;
+        }
+
         if (wallObstructionRatio > 0.75f) return;
 
         float fireInterval = 60f / Mathf.Max(1f, wp.rpm);
@@ -590,7 +658,7 @@ public class UniversalFPSController : MonoBehaviour
     {
         FPSWeaponData wp = ActiveWeapon;
         float adsSpeed = wp != null ? wp.adsSpeed : 10f;
-        float swayWeight = wp != null ? wp.swayWeight : 1.0f;
+        float swayWeight = (wp != null ? wp.swayWeight : 1.0f) * conditionSwayMultiplier;
 
         bool wantsAds = Input.GetMouseButton(1) && !isSprinting && !isSliding && !isReloading && wallObstructionRatio < 0.5f;
         adsWeight = Mathf.MoveTowards(adsWeight, wantsAds ? 1.0f : 0.0f, dt * adsSpeed);
@@ -671,6 +739,10 @@ public class UniversalFPSController : MonoBehaviour
                 baseRot += new Vector3(18f, -22f, 28f) * otherPoseDamp;
             }
 
+            // 外部状態が指定する構え(片手操作など)。他の姿勢と同じく壁干渉で減衰させる。
+            basePos += conditionWeaponPosOffset * otherPoseDamp;
+            baseRot += conditionWeaponRotOffset * otherPoseDamp;
+
             if (wallObstructionRatio > 0f)
             {
                 basePos += new Vector3(-0.05f * wallObstructionRatio, -0.08f * wallObstructionRatio, -0.22f * wallObstructionRatio);
@@ -679,6 +751,22 @@ public class UniversalFPSController : MonoBehaviour
                     float foldT = (wallObstructionRatio - 0.45f) / 0.55f;
                     baseRot += new Vector3(-55f * foldT, 0f, 20f * foldT);
                 }
+            }
+
+            // 手の震え。銃口が定まらなくなる。規則的な揺れだと機械的に見えるので、
+            // 周波数の違うノイズを軸ごとに重ねる。構えると多少は抑えられるが消えはしない。
+            if (conditionTremor > 0.001f)
+            {
+                float t = Time.time;
+                float amp = conditionTremor * Mathf.Lerp(1f, 0.55f, adsWeight);
+                // 固定側の座標を格子点から外しておく。Perlinは整数格子上で値が偏ることがある。
+                baseRot += new Vector3(
+                    (Mathf.PerlinNoise(t * 13f, 0.37f) - 0.5f) * 9f * amp,
+                    (Mathf.PerlinNoise(5.11f, t * 11f) - 0.5f) * 9f * amp,
+                    (Mathf.PerlinNoise(t * 7f, t * 5f) - 0.5f) * 6f * amp);
+                basePos += new Vector3(
+                    (Mathf.PerlinNoise(t * 9f, 2.63f) - 0.5f) * 0.022f * amp,
+                    (Mathf.PerlinNoise(8.29f, t * 10f) - 0.5f) * 0.022f * amp, 0f);
             }
 
             float swayX = Mathf.Clamp(-Input.GetAxisRaw("Mouse X") * 1.8f * swayWeight * swayDampener, -8f, 8f);

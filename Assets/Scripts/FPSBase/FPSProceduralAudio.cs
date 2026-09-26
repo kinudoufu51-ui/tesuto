@@ -26,8 +26,12 @@ public class FPSProceduralAudio : MonoBehaviour
     private AudioClip genSlideLoop;
     private AudioClip genHitmarker;
     private AudioClip genIndoorTail;
+    private AudioClip genClipDrop;
+    private AudioClip genBreath;
     private AudioClip[] genGunshots = new AudioClip[6];
 
+    private AudioSource breathSource;
+    private float breathTimer;
     private float stepCycleDistance;
     private int stepSide = 1;
 
@@ -38,6 +42,7 @@ public class FPSProceduralAudio : MonoBehaviour
         foleySource = CreateChildSource("Audio_FoleyGear", false);
         slideSource = CreateChildSource("Audio_SlideLoop", true);
         gunSource   = CreateChildSource("Audio_WeaponFire", false);
+        breathSource = CreateChildSource("Audio_Breathing", false);
 
         SynthesizeDefaultAudioClips();
         slideSource.clip = customSlideLoopClip != null ? customSlideLoopClip : genSlideLoop;
@@ -52,6 +57,7 @@ public class FPSProceduralAudio : MonoBehaviour
         controller.OnLanded         += HandleLanded;
         controller.OnBulletHit      += HandleBulletHit;
         controller.OnReloadStarted  += HandleReloadStarted;
+        controller.OnReloadFumbled  += HandleReloadFumbled;
     }
 
     void OnDisable()
@@ -63,6 +69,7 @@ public class FPSProceduralAudio : MonoBehaviour
         controller.OnLanded         -= HandleLanded;
         controller.OnBulletHit      -= HandleBulletHit;
         controller.OnReloadStarted  -= HandleReloadStarted;
+        controller.OnReloadFumbled  -= HandleReloadFumbled;
     }
 
     void Update()
@@ -70,6 +77,30 @@ public class FPSProceduralAudio : MonoBehaviour
         float dt = Time.deltaTime;
         UpdateFootstepsAndStride(dt);
         UpdateSlideFrictionSound(dt);
+        UpdateBreathing(dt);
+    }
+
+    /// <summary>
+    /// 息切れ。数値UIを出さない方針なので、自分がどれだけ消耗しているかは音でしか分からない。
+    /// 上がるほど呼吸が速く浅くなる。
+    /// </summary>
+    private void UpdateBreathing(float dt)
+    {
+        float effort = controller.conditionBreathlessness;
+        if (effort <= 0.02f) return;
+
+        breathTimer -= dt;
+        if (breathTimer > 0f) return;
+
+        breathTimer = Mathf.Lerp(2.2f, 0.75f, effort);
+        breathSource.pitch = Mathf.Lerp(0.85f, 1.25f, effort) + Random.Range(-0.04f, 0.04f);
+        breathSource.PlayOneShot(genBreath, masterVolume * 0.5f * effort);
+    }
+
+    private void HandleReloadFumbled()
+    {
+        foleySource.pitch = Random.Range(0.94f, 1.06f);
+        foleySource.PlayOneShot(genClipDrop, masterVolume * 0.85f);
     }
 
     private void UpdateFootstepsAndStride(float dt)
@@ -240,6 +271,23 @@ public class FPSProceduralAudio : MonoBehaviour
         {
             float env = Mathf.Exp(-norm * 5.5f) * (1f - Mathf.Exp(-norm * 30f));
             return (Random.value * 2f - 1f) * 0.45f * env;
+        });
+
+        // 取り落としたクリップが踏み板に当たる音。金属の高い成分と、跳ねる不規則な成分を重ねる。
+        genClipDrop = CreateProceduralClip("Synth_ClipDrop", 0.38f, sr, (t, norm) =>
+        {
+            float env = Mathf.Exp(-norm * 9f);
+            float ping = Mathf.Sin(2f * Mathf.PI * 1850f * t) * 0.4f
+                       + Mathf.Sin(2f * Mathf.PI * 2700f * t) * 0.3f;
+            float rattle = (Random.value * 2f - 1f) * 0.5f * Mathf.Exp(-norm * 20f);
+            return (ping + rattle) * env;
+        });
+
+        // 呼吸。吸って吐く一往復を、ノイズの膨らみで表す。
+        genBreath = CreateProceduralClip("Synth_Breath", 0.55f, sr, (t, norm) =>
+        {
+            float env = Mathf.Sin(norm * Mathf.PI);
+            return (Random.value * 2f - 1f) * 0.22f * env * env;
         });
 
         genGunshots[0] = genHitmarker;
