@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1cc92612d35e25a4597cdaddaeb4b422, type: 3}
+  m_Name: 04_Combat_Shotgun
+  m_EditorClassIdentifier: 
+  weaponName: 04_Combat_Shotgun
+  fireMode: 3
+  rpm: 80
+  magCapacity: 8
+  supportsChamberPlusOne: 1
+  tacticalReloadTime: 2
+  emptyReloadTime: 2.6
+  pelletCount: 10
+  baseSpreadAngle: 3.5
+  maxRange: 150
+  firstShotMultiplier: 1
+  realRecoilPitch: 5.5
+  realRecoilYaw: 1
+  visualKickbackZ: 0.12
+  visualKickPitch: 12
+  visualCameraRoll: 4.5
+  smartRecoverySpeed: 6
+  recoveryDelay: 0.15
+  adsSpeed: 10
+  adsFovMultiplier: 0.85
+  swayWeight: 1.4
+  breathSwayAmount: 0.2
+  weaponLength: 0.9

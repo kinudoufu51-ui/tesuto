@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1cc92612d35e25a4597cdaddaeb4b422, type: 3}
+  m_Name: 02_HighRPM_SMG
+  m_EditorClassIdentifier: 
+  weaponName: 02_HighRPM_SMG
+  fireMode: 2
+  rpm: 900
+  magCapacity: 35
+  supportsChamberPlusOne: 1
+  tacticalReloadTime: 1.35
+  emptyReloadTime: 1.85
+  pelletCount: 1
+  baseSpreadAngle: 0.3
+  maxRange: 150
+  firstShotMultiplier: 1.2
+  realRecoilPitch: 0.6
+  realRecoilYaw: 0.65
+  visualKickbackZ: 0.035
+  visualKickPitch: 2.5
+  visualCameraRoll: 0.8
+  smartRecoverySpeed: 16
+  recoveryDelay: 0.03
+  adsSpeed: 16
+  adsFovMultiplier: 0.85
+  swayWeight: 0.6
+  breathSwayAmount: 0.15
+  weaponLength: 0.6
