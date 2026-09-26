@@ -17,6 +17,25 @@ public static class FPSBaseAutoSetupEditor
     [MenuItem("Tools/FPS Base/⚡ 1. One-Click Build Complete Test Scene (全自動構築)")]
     public static void BuildCompleteScene()
     {
+        FPSWeaponData[] weapons = EnsureWeaponAssets();
+
+        GameObject existingGym = GameObject.Find("FPSMetricGym");
+        if (existingGym != null) Object.DestroyImmediate(existingGym);
+
+        GameObject gymObj = new GameObject("FPSMetricGym");
+        gymObj.AddComponent<FPSGreyboxBuilder>().BuildGym();
+
+        GameObject playerRoot = BuildPlayer(weapons, new Vector3(0f, 1.05f, 0f));
+
+        Selection.activeGameObject = playerRoot;
+        Debug.Log("✅ [FPS Base Complete Edition] 全自動構築が完了しました！そのまま再生(▶)ボタンを押してください。");
+    }
+
+    /// <summary>
+    /// 6種のテスト銃アセットを用意して返す。既存アセットがあれば手動調整値を保持したまま再利用する。
+    /// </summary>
+    public static FPSWeaponData[] EnsureWeaponAssets()
+    {
         string folderPath = "Assets/Resources/FPSWeaponPresets";
         if (!Directory.Exists(folderPath))
         {
@@ -43,24 +62,26 @@ public static class FPSBaseAutoSetupEditor
             weapons[i] = data;
         }
         AssetDatabase.SaveAssets();
+        return weapons;
+    }
 
+    /// <summary>
+    /// 6階層のプレイヤー(PlayerRoot→LeanPivot→StancePivot→CameraShaker→MainCamera/WeaponHolder)を構築する。
+    /// 既存のPlayerRootがあれば作り直す。
+    /// </summary>
+    public static GameObject BuildPlayer(FPSWeaponData[] weapons, Vector3 position)
+    {
         Camera existingCam = Object.FindFirstObjectByType<Camera>();
         if (existingCam != null && existingCam.transform.root.name != "PlayerRoot")
         {
             existingCam.gameObject.SetActive(false);
         }
 
-        GameObject existingGym = GameObject.Find("FPSMetricGym");
-        if (existingGym != null) Object.DestroyImmediate(existingGym);
-
-        GameObject gymObj = new GameObject("FPSMetricGym");
-        gymObj.AddComponent<FPSGreyboxBuilder>().BuildGym();
-
         GameObject existingPlayer = GameObject.Find("PlayerRoot");
         if (existingPlayer != null) Object.DestroyImmediate(existingPlayer);
 
         GameObject playerRoot = new GameObject("PlayerRoot");
-        playerRoot.transform.position = new Vector3(0f, 1.05f, 0f);
+        playerRoot.transform.position = position;
         int ignoreRaycastLayer = LayerMask.NameToLayer("Ignore Raycast");
         playerRoot.layer = ignoreRaycastLayer;
 
@@ -101,8 +122,7 @@ public static class FPSBaseAutoSetupEditor
         playerRoot.AddComponent<FPSProceduralAudio>();
         playerRoot.AddComponent<FPSTelemetryAndDecals>();
 
-        Selection.activeGameObject = playerRoot;
-        Debug.Log("✅ [FPS Base Complete Edition] 全自動構築が完了しました！そのまま再生(▶)ボタンを押してください。");
+        return playerRoot;
     }
 
     [MenuItem("Tools/FPS Base/⚠ Reset All Weapon Presets to Defaults (手動調整を破棄)")]
