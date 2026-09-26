@@ -102,8 +102,11 @@ public class FPSTelemetryAndDecals : MonoBehaviour
         }
     }
 
-    private void HandleBulletHit(Vector3 point, Vector3 normal, int shotIndex, bool isTarget)
+    private void HandleBulletHit(RaycastHit hit, int shotIndex, bool isTarget)
     {
+        Vector3 point = hit.point;
+        Vector3 normal = hit.normal;
+
         DecalEntry entry = decalPool[currentPoolIndex];
         currentPoolIndex = (currentPoolIndex + 1) % maxDecals;
 

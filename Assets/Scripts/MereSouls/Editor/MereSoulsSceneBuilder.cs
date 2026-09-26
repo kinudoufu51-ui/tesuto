@@ -28,6 +28,10 @@ public static class MereSoulsSceneBuilder
         playerRoot.AddComponent<FPSSoldierCondition>();
         playerRoot.AddComponent<FPSConditionOverlay>();
 
+        // 彩度を落とす処理はカメラ側でないと効かない。
+        Camera playerCam = playerRoot.GetComponentInChildren<Camera>();
+        if (playerCam != null) playerCam.gameObject.AddComponent<MereSoulsScreenEffect>();
+
         Selection.activeGameObject = playerRoot;
         Debug.Log("✅ [MERE SOULS] 塹壕セクターを構築しました。\n" +
                   "・床に立つと胸壁の0.75m下で外が見えません。火点(0.76m)に上がり、銃眼の正面からだけ覗けます。\n" +

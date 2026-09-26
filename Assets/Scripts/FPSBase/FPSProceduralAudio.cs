@@ -225,7 +225,7 @@ public class FPSProceduralAudio : MonoBehaviour
         return hitCount / 3.0f;
     }
 
-    private void HandleBulletHit(Vector3 point, Vector3 normal, int shotIndex, bool isTarget)
+    private void HandleBulletHit(RaycastHit hit, int shotIndex, bool isTarget)
     {
         if (isTarget)
         {

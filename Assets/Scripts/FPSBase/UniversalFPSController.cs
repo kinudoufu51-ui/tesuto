@@ -39,7 +39,10 @@ public class UniversalFPSController : MonoBehaviour
     public float jumpBufferDuration = 0.12f;
 
     [Header("=== 5. 空間センサー＆レイキャスト設定 ===")]
+    /// <summary>地形を感知するレイ用。自分や他の兵士の身体は含めない。</summary>
     public LayerMask environmentMask = ~0;
+    /// <summary>弾が当たる対象。地形の感知とは別で、兵士を含める必要がある。</summary>
+    public LayerMask shootableMask = ~0;
     public float vaultReachDistance = 1.0f;
     public float leanProbeOffset = 0.38f;
     public float leanProbeDistance = 1.4f;
@@ -74,7 +77,8 @@ public class UniversalFPSController : MonoBehaviour
     [HideInInspector] public Vector3 conditionWeaponRotOffset;
 
     // --- イベント通知 ---
-    public System.Action<Vector3, Vector3, int, bool> OnBulletHit;
+    /// <summary>命中通知。当たった相手を特定できるよう RaycastHit をそのまま渡す。</summary>
+    public System.Action<RaycastHit, int, bool> OnBulletHit;
     public System.Action<FPSWeaponData> OnWeaponFired;
     public System.Action<int> OnWeaponSwapped;
     public System.Action<bool> OnVaultTriggered;
@@ -645,11 +649,11 @@ public class UniversalFPSController : MonoBehaviour
                     Random.Range(-wp.baseSpreadAngle, wp.baseSpreadAngle), 0f) * shotDir;
             }
 
-            if (Physics.Raycast(mainCamera.transform.position, shotDir, out RaycastHit hit, wp.maxRange, environmentMask))
+            if (Physics.Raycast(mainCamera.transform.position, shotDir, out RaycastHit hit, wp.maxRange, shootableMask))
             {
                 Debug.DrawLine(mainCamera.transform.position, hit.point, Color.yellow, 0.25f);
                 bool isTarget = hit.collider.name.Contains("Target");
-                OnBulletHit?.Invoke(hit.point, hit.normal, consecutiveShots, isTarget);
+                OnBulletHit?.Invoke(hit, consecutiveShots, isTarget);
             }
         }
     }

@@ -16,6 +16,8 @@ public class FPSWeaponData : ScriptableObject
     public int pelletCount = 1;
     public float baseSpreadAngle = 0.15f;
     public float maxRange = 150f;
+    [Tooltip("命中一発の重さ。被弾側の状態システムがこれを負傷量に変換する。散弾は1粒あたりの値なので低くする。")]
+    public float hitImpact = 1.0f;
 
     [Header("2. 第1層：実カメラリコイル (BF4初弾倍率 × BFVバレル一致)")]
     public float firstShotMultiplier = 2.0f;
