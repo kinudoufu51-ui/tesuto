@@ -296,17 +296,27 @@ public class UniversalFPSController : MonoBehaviour
             }
             else
             {
+                StanceState prevStance = currentStance;
                 if (currentStance == StanceState.Crouch && !hasLowCeiling)
                     currentStance = StanceState.Stand;
                 else
                     currentStance = StanceState.Crouch;
+
+                // BF1式の「体重が乗る」カメラ沈み込み：しゃがみ/伏せの切り替え時も
+                // 着地やスライド開始と同じバネ演出を入れ、単純なLerpだけの不自然な動きを防ぐ。
+                if (currentStance != prevStance)
+                    cameraLandSpring.AddImpulse(new Vector3(0f, currentStance == StanceState.Crouch ? -0.12f : 0.08f, 0f));
             }
         }
         else if (Input.GetKeyDown(KeyCode.Z))
         {
+            StanceState prevStance = currentStance;
             currentStance = (currentStance == StanceState.Prone && !hasLowCeiling) ? StanceState.Stand : StanceState.Prone;
             isSupineProne = (currentStance == StanceState.Prone) &&
                             (moveInput.y < -0.1f || Physics.Raycast(transform.position + Vector3.up * 0.5f, -transform.forward, 0.9f, environmentMask));
+
+            if (currentStance != prevStance)
+                cameraLandSpring.AddImpulse(new Vector3(0f, currentStance == StanceState.Prone ? -0.26f : 0.18f, 0f));
         }
 
         if (hasLowCeiling && currentStance == StanceState.Stand)
