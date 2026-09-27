@@ -46,6 +46,10 @@ public static class DiamondStraitsTestSceneBuilder
         if (existingDesk != null) Object.DestroyImmediate(existingDesk);
         BuildGunDesk(new Vector3(-2f, 0.5f, -2f));
 
+        GameObject existingTank = GameObject.Find("MiniTank");
+        if (existingTank != null) Object.DestroyImmediate(existingTank);
+        BuildMiniTank(new Vector3(5f, 1.0f, -3f));
+
         Selection.activeGameObject = playerRoot;
         Debug.Log("✅ [Diamond Straits] 麻酔コア検証シーンを構築しました。\n" +
                   "・武器(既存6プリセット、または先に「全48丁の武器カタログを生成」していればそちら)をテストNPCに撃つと麻酔が蓄積し、\n" +
@@ -55,7 +59,10 @@ public static class DiamondStraitsTestSceneBuilder
                   "・Hキーで自分を被弾させると自分も眠ります。ロック秒数が経過すると自分にJキーで自然リスポーン(ルート③)、\n" +
                   "  さらに長く放置すると自動で自力覚醒します(ルート④)。\n" +
                   "・スポーン地点そばの「GunDesk」に近づきEで武器ロッカーを開き、一覧から武器を選ぶと即座に持ち替わります" +
-                  "(兵科を選んでいればその兵科の武器だけに絞られます)。");
+                  "(兵科を選んでいればその兵科の武器だけに絞られます)。\n" +
+                  "・「MiniTank」の乗降口に近づきEで搭乗(左側面=操縦席/右側面=ガンナー席)。WASDで走行、Fで降車。\n" +
+                  "  段差に無理に乗り上げるなどして横転すると操縦不能になり、外から近づいてEを1.5秒長押しすると起こせます。\n" +
+                  "  (ガンナーの麻酔ガス砲・拠点占領による出撃制限はまだ未実装です)");
     }
 
     /// <summary>
@@ -84,6 +91,61 @@ public static class DiamondStraitsTestSceneBuilder
         desk.transform.position = position;
         desk.transform.localScale = new Vector3(1.2f, 1.0f, 0.6f);
         desk.AddComponent<DiamondStraitsGunDesk>();
+    }
+
+    /// <summary>
+    /// 豆戦車のプレースホルダー。見た目は仮の直方体で、コミカルな意匠はアートが入ってから差し替える。
+    /// ハル本体は物理スケール(1.6×1.0×2.4)を持つが、座席・乗降口はスケールの影響を受けない
+    /// ルート直下に置き、実寸メートルでそのまま配置できるようにしている。
+    /// </summary>
+    private static void BuildMiniTank(Vector3 position)
+    {
+        GameObject root = new GameObject("MiniTank");
+        root.transform.position = position;
+
+        Rigidbody body = root.AddComponent<Rigidbody>();
+        body.mass = 400f;
+        body.linearDamping = 1f;
+        body.angularDamping = 2f;
+
+        MiniTankController controller = root.AddComponent<MiniTankController>();
+
+        GameObject hullVisual = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        hullVisual.name = "HullVisual";
+        hullVisual.transform.SetParent(root.transform, false);
+        hullVisual.transform.localScale = new Vector3(1.6f, 1.0f, 2.4f);
+        Object.DestroyImmediate(hullVisual.GetComponent<Collider>());
+        root.AddComponent<BoxCollider>().size = new Vector3(1.6f, 1.0f, 2.4f);
+
+        controller.driverSeat = CreateChild(root.transform, "DriverSeatView", new Vector3(0.3f, 0.3f, 0.4f));
+        controller.gunnerSeat = CreateChild(root.transform, "GunnerSeatView", new Vector3(-0.3f, 0.5f, -0.4f));
+        controller.exitPoint = CreateChild(root.transform, "ExitPoint", new Vector3(1.2f, -0.3f, 0f));
+
+        BuildSeatDoor(root.transform, "DriverDoor", new Vector3(0.9f, 0f, 0.5f), controller, true);
+        BuildSeatDoor(root.transform, "GunnerDoor", new Vector3(-0.9f, 0f, -0.5f), controller, false);
+    }
+
+    private static Transform CreateChild(Transform parent, string name, Vector3 localPosition)
+    {
+        GameObject go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = localPosition;
+        return go.transform;
+    }
+
+    private static void BuildSeatDoor(Transform parent, string name, Vector3 localPosition, MiniTankController vehicle, bool isDriverSeat)
+    {
+        GameObject door = new GameObject(name);
+        door.transform.SetParent(parent, false);
+        door.transform.localPosition = localPosition;
+
+        SphereCollider trigger = door.AddComponent<SphereCollider>();
+        trigger.isTrigger = true;
+        trigger.radius = 0.5f;
+
+        MiniTankSeat seat = door.AddComponent<MiniTankSeat>();
+        seat.vehicle = vehicle;
+        seat.isDriverSeat = isDriverSeat;
     }
 
     private static void BuildDummy(Transform parent, string name, Vector3 position)
