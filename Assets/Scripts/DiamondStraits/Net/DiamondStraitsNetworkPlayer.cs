@@ -210,4 +210,13 @@ public class DiamondStraitsNetworkPlayer : NetworkBehaviour
         if (!IsOwner) return;
         condition.Revive(residualSedation);
     }
+
+    /// <summary>
+    /// 被弾以外の経路(麻酔ガス散布砲など)から麻酔を与えたいときの入口。
+    /// ReportHitServerRpc と同じ経路をそのまま使い回す。
+    /// </summary>
+    public void RequestSedation(float amount, float lockSeconds)
+    {
+        ReportHitServerRpc(amount, lockSeconds);
+    }
 }
