@@ -169,6 +169,19 @@ public class UniversalFPSController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// スロットの武器を差し替え、弾数をその武器の満タンにリセットする。
+    /// ロッカーやガンデスクなど、ゲーム層の装備選択UIから呼ばれる想定の汎用API。
+    /// </summary>
+    public void SetWeaponSlot(int index, FPSWeaponData weapon)
+    {
+        if (weaponSlots == null || index < 0 || index >= weaponSlots.Length) return;
+
+        weaponSlots[index] = weapon;
+        if (slotAmmo == null || slotAmmo.Length != weaponSlots.Length) slotAmmo = new int[weaponSlots.Length];
+        slotAmmo[index] = weapon != null ? weapon.magCapacity : 0;
+    }
+
     void Update()
     {
         float dt = Time.deltaTime;
