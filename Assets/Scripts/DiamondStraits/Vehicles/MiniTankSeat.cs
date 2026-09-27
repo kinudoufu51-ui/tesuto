@@ -19,8 +19,11 @@ public class MiniTankSeat : MonoBehaviour, IFPSInteractable
 
     public float GetHoldDuration(UniversalFPSController player) => 0f;
 
-    public bool CanInteract(UniversalFPSController player) =>
-        isDriverSeat ? !vehicle.HasDriver : !vehicle.HasGunner;
+    public bool CanInteract(UniversalFPSController player)
+    {
+        bool seatFree = isDriverSeat ? !vehicle.HasDriver : !vehicle.HasGunner;
+        return seatFree && vehicle.CanDeployFor(player);
+    }
 
     public void OnInteract(UniversalFPSController player)
     {

@@ -6,8 +6,12 @@ using UnityEngine;
 /// 「よくある一場面」として許容するため、CharacterController のような姿勢を保証する仕組みは
 /// あえて持たせない — 無理に段差へ乗り上げれば普通に転ぶ。
 ///
-/// 含まれないもの(基礎実装のスコープ外): 背面吸気口への麻酔カウンター、拠点占領による
-/// アーケード出撃制限。いずれもガジェット/コンクエスト統合が深く絡むため後回しにする。
+/// 含まれないもの(基礎実装のスコープ外): 背面吸気口への麻酔カウンター。ガジェット統合が
+/// 深く絡むため後回しにする。拠点占領による出撃制限(deploymentGate)は §出撃条件 参照。
+///
+/// このコントローラー自身は Rigidbody をネットワーク同期しない。コンクエストの検証シーンに
+/// 置く場合も、車両の物理はホストのローカルシミュレーションのみが正になる — 複数クライアント
+/// 間で位置を一致させるには別途 NetworkTransform 等の統合が必要で、これは基礎実装の対象外。
 ///
 /// 搭乗中は UniversalFPSController を丸ごと無効化するため、素体側のマウス視点操作も
 /// 一緒に止まってしまう。これを補うため、座席の Transform 自体をここで直接回転させて
@@ -32,6 +36,10 @@ public class MiniTankController : MonoBehaviour, IFPSInteractable
     public float rightingHoldDuration = 1.5f;
 
     public KeyCode exitKey = KeyCode.F;
+
+    [Header("出撃条件(企画書 §2 アーケード拠点)")]
+    [Tooltip("指定した拠点を占領している陣営だけが搭乗できる。未設定(null)なら誰でも搭乗できる(検証シーン向けの既定動作)。")]
+    public DiamondStraitsCapturePoint deploymentGate;
 
     [Header("搭乗中の視点操作")]
     public float lookSensitivity = 2.5f;
@@ -162,11 +170,27 @@ public class MiniTankController : MonoBehaviour, IFPSInteractable
         }
     }
 
+    /// <summary>
+    /// 出撃条件の判定。deploymentGate が未設定なら常に true(検証シーン等での自由搭乗を維持する)。
+    /// ネットワーク未接続のプレイヤー(DiamondStraitsNetworkPlayer を持たない)も、陣営という概念が
+    /// 無いのでそのまま許可する — シングルプレイ検証を壊さないための扱い。
+    /// </summary>
+    public bool CanDeployFor(UniversalFPSController player)
+    {
+        if (deploymentGate == null) return true;
+
+        DiamondStraitsNetworkPlayer netPlayer = player.GetComponent<DiamondStraitsNetworkPlayer>();
+        if (netPlayer == null) return true;
+
+        return deploymentGate.OwningFaction == netPlayer.Faction;
+    }
+
     /// <summary>座席への搭乗。MiniTankSeat から呼ばれる。</summary>
     public void Enter(UniversalFPSController player, bool asDriver)
     {
         if (asDriver && driver != null) return;
         if (!asDriver && gunner != null) return;
+        if (!CanDeployFor(player)) return;
 
         CharacterController cc = player.GetComponent<CharacterController>();
         Camera cam = player.mainCamera;

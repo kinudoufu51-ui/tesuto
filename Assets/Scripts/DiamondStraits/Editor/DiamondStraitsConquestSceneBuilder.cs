@@ -40,6 +40,12 @@ public static class DiamondStraitsConquestSceneBuilder
         BuildConquestManager(pointMarkers);
         SetUpNetworkManager(prefab);
 
+        // East を企画書の「C. アーケード拠点」に見立て、占領した陣営だけが豆戦車を使えるようにする。
+        DiamondStraitsCapturePoint arcadePoint = pointMarkers[1].GetComponent<DiamondStraitsCapturePoint>();
+        GameObject existingTank = GameObject.Find("MiniTank");
+        if (existingTank != null) Object.DestroyImmediate(existingTank);
+        BuildMiniTank(pointMarkers[1].position + new Vector3(-10f, 1.0f, 3f), arcadePoint);
+
         Selection.activeGameObject = GameObject.Find("NetworkManager");
         Debug.Log("✅ [Diamond Straits] コンクエスト対戦シーンを構築しました。\n" +
                   "・再生後、画面右上の「ホストとして開く」でホスト、別PCから相手のIPを入れて「参加する」。\n" +
@@ -48,7 +54,10 @@ public static class DiamondStraitsConquestSceneBuilder
                   "・チケットが0になった陣営の敗北です。左上のHUDで戦況を確認してください。\n" +
                   "・眠っている相手には近づいてEで蘇生できます(看護兵1.2秒/それ以外3.5〜6.0秒、Kキーで兵科切替)。\n" +
                   "・Bキーで武器ロッカーを開けます(物理デスクはまだ未配置)。先に「全48丁の武器カタログを生成」していれば、\n" +
-                  "  選んだ兵科の武器だけに絞り込まれます。");
+                  "  選んだ兵科の武器だけに絞り込まれます。\n" +
+                  "・「MiniTank」はEast拠点(企画書のアーケード拠点)を占領している陣営だけが乗降できます。未占領/敵占領中は\n" +
+                  "  乗降口が反応しません。豆戦車の物理はホストのローカルシミュレーションのみで、クライアント間の\n" +
+                  "  位置同期はまだ実装していません(基礎実装のスコープ外)。");
     }
 
     /// <summary>
@@ -200,6 +209,62 @@ public static class DiamondStraitsConquestSceneBuilder
         net.NetworkConfig.ConnectionApproval = false;
 
         go.AddComponent<MereSoulsNetworkUI>();
+    }
+
+    /// <summary>
+    /// 豆戦車のプレースホルダー。見た目は仮の直方体で、コミカルな意匠はアートが入ってから差し替える。
+    /// ハル本体は物理スケール(1.6×1.0×2.4)を持つが、座席・乗降口はスケールの影響を受けない
+    /// ルート直下に置き、実寸メートルでそのまま配置できるようにしている。
+    /// </summary>
+    private static void BuildMiniTank(Vector3 position, DiamondStraitsCapturePoint deploymentGate)
+    {
+        GameObject root = new GameObject("MiniTank");
+        root.transform.position = position;
+
+        Rigidbody body = root.AddComponent<Rigidbody>();
+        body.mass = 400f;
+        body.linearDamping = 1f;
+        body.angularDamping = 2f;
+
+        MiniTankController controller = root.AddComponent<MiniTankController>();
+        controller.deploymentGate = deploymentGate;
+
+        GameObject hullVisual = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        hullVisual.name = "HullVisual";
+        hullVisual.transform.SetParent(root.transform, false);
+        hullVisual.transform.localScale = new Vector3(1.6f, 1.0f, 2.4f);
+        Object.DestroyImmediate(hullVisual.GetComponent<Collider>());
+        root.AddComponent<BoxCollider>().size = new Vector3(1.6f, 1.0f, 2.4f);
+
+        controller.driverSeat = CreateChild(root.transform, "DriverSeatView", new Vector3(0.3f, 0.3f, 0.4f));
+        controller.gunnerSeat = CreateChild(root.transform, "GunnerSeatView", new Vector3(-0.3f, 0.5f, -0.4f));
+        controller.exitPoint = CreateChild(root.transform, "ExitPoint", new Vector3(1.2f, -0.3f, 0f));
+
+        BuildSeatDoor(root.transform, "DriverDoor", new Vector3(0.9f, 0f, 0.5f), controller, true);
+        BuildSeatDoor(root.transform, "GunnerDoor", new Vector3(-0.9f, 0f, -0.5f), controller, false);
+    }
+
+    private static Transform CreateChild(Transform parent, string name, Vector3 localPosition)
+    {
+        GameObject go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = localPosition;
+        return go.transform;
+    }
+
+    private static void BuildSeatDoor(Transform parent, string name, Vector3 localPosition, MiniTankController vehicle, bool isDriverSeat)
+    {
+        GameObject door = new GameObject(name);
+        door.transform.SetParent(parent, false);
+        door.transform.localPosition = localPosition;
+
+        SphereCollider trigger = door.AddComponent<SphereCollider>();
+        trigger.isTrigger = true;
+        trigger.radius = 0.5f;
+
+        MiniTankSeat seat = door.AddComponent<MiniTankSeat>();
+        seat.vehicle = vehicle;
+        seat.isDriverSeat = isDriverSeat;
     }
 
     private static void SetLayerRecursively(GameObject go, int layer)
