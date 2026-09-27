@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1cc92612d35e25a4597cdaddaeb4b422, type: 3}
+  m_Name: 01_Standard_AR
+  m_EditorClassIdentifier: 
+  weaponName: 01_Standard_AR
+  fireMode: 2
+  rpm: 650
+  magCapacity: 30
+  supportsChamberPlusOne: 1
+  tacticalReloadTime: 1.6
+  emptyReloadTime: 2.2
+  pelletCount: 1
+  baseSpreadAngle: 0.15
+  maxRange: 150
+  firstShotMultiplier: 2
+  realRecoilPitch: 1.2
+  realRecoilYaw: 0.4
+  visualKickbackZ: 0.06
+  visualKickPitch: 4.5
+  visualCameraRoll: 1.2
+  smartRecoverySpeed: 12
+  recoveryDelay: 0.05
+  adsSpeed: 12
+  adsFovMultiplier: 0.75
+  swayWeight: 1
+  breathSwayAmount: 0.25
+  weaponLength: 0.85
