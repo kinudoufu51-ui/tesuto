@@ -22,7 +22,7 @@ public class FPSSupplyCrate : MonoBehaviour, IFPSInteractable
     }
 
     public string GetInteractionPrompt() => isOpened ? "開封済み" : "物資クレートを開封";
-    public float GetHoldDuration() => holdDuration;
+    public float GetHoldDuration(UniversalFPSController player) => holdDuration;
     public bool CanInteract(UniversalFPSController player) => !isOpened;
 
     public void OnInteract(UniversalFPSController player)

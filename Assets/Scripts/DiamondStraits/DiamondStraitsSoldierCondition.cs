@@ -16,11 +16,16 @@ public class DiamondStraitsSoldierCondition : MonoBehaviour
              "実際のPvPでは武器ごとの sedationPerHit を DiamondStraitsLocalHitRouter 経由で使う。")]
     public float sedationPerFullIntensityHit = 34f;
 
-    [Tooltip("昏睡中に本人がJキーを押すと目覚める安全弁。1人でのテスト用で、実プレイでは使わない想定。")]
-    public bool allowDebugSelfRevive = true;
-
     public float Sedation { get; private set; }
     public bool IsAsleep { get; private set; }
+
+    /// <summary>
+    /// 昏睡に落ちた瞬間の武器の forcedRespawnLockSeconds。分隊蘇生の所要時間や
+    /// 自然リスポーン・自力覚醒の待ち時間はすべてこの値から計算する(企画書 §3-2)。
+    /// </summary>
+    public float SedationDepthSeconds { get; private set; } = 16f;
+
+    private float pendingLockSeconds = 16f;
 
     /// <summary>昏睡に入った瞬間の通知。Zzz演出や画面効果、リスポーンタイマー起動の起点になる。</summary>
     public System.Action OnEnterSleep;
@@ -61,11 +66,6 @@ public class DiamondStraitsSoldierCondition : MonoBehaviour
     void Update()
     {
         if (controller != null) PushToController();
-
-        if (IsAsleep && allowDebugSelfRevive && Input.GetKeyDown(KeyCode.J))
-        {
-            Revive(0f);
-        }
     }
 
     /// <summary>
@@ -86,17 +86,19 @@ public class DiamondStraitsSoldierCondition : MonoBehaviour
     }
 
     /// <summary>麻酔を積む。武器の sedationPerHit、またはデバッグ換算値から呼ばれる。</summary>
-    public void ApplySedation(float amount)
+    public void ApplySedation(float amount, float lockSeconds = 16f)
     {
         if (IsAsleep || amount <= 0f) return;
 
         Sedation = Mathf.Min(100f, Sedation + amount);
+        pendingLockSeconds = lockSeconds;
         if (Sedation >= 100f) EnterSleep();
     }
 
     private void EnterSleep()
     {
         IsAsleep = true;
+        SedationDepthSeconds = pendingLockSeconds;
         if (controller != null) controller.enabled = false;
         OnEnterSleep?.Invoke();
     }

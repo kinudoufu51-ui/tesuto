@@ -28,7 +28,7 @@ public class FPSDoor : MonoBehaviour, IFPSInteractable
     }
 
     public string GetInteractionPrompt() => isOpen ? promptClose : promptOpen;
-    public float GetHoldDuration() => 0f;
+    public float GetHoldDuration(UniversalFPSController player) => 0f;
     public bool CanInteract(UniversalFPSController player) => true;
 
     public void OnInteract(UniversalFPSController player)

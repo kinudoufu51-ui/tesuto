@@ -74,7 +74,7 @@ public class FPSInteractionSystem : MonoBehaviour
     {
         if (currentTarget == null) return;
 
-        float holdDuration = currentTarget.GetHoldDuration();
+        float holdDuration = currentTarget.GetHoldDuration(controller);
         if (holdDuration <= 0.01f)
         {
             if (Input.GetKeyDown(interactKey)) ExecuteInteraction(false);
@@ -128,7 +128,7 @@ public class FPSInteractionSystem : MonoBehaviour
 
         float cx = Screen.width * 0.5f;
         float cy = Screen.height * 0.5f + 42f;
-        float holdReq = currentTarget.GetHoldDuration();
+        float holdReq = currentTarget.GetHoldDuration(controller);
         string actionType = holdReq > 0.01f ? $"長押し {holdReq:F1}s" : "押す";
         string text = $"<color=#FFDD44>[{interactKey}]</color> {currentTarget.GetInteractionPrompt()} <size=11><color=#CCCCCC>({actionType})</color></size>";
 

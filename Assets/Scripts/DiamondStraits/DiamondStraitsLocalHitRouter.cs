@@ -34,6 +34,7 @@ public class DiamondStraitsLocalHitRouter : MonoBehaviour
 
         FPSWeaponData wp = controller.CurrentWeaponData;
         float amount = wp != null ? wp.sedationPerHit : 25f;
-        victim.ApplySedation(amount);
+        float lockSeconds = wp != null ? wp.forcedRespawnLockSeconds : 16f;
+        victim.ApplySedation(amount, lockSeconds);
     }
 }
