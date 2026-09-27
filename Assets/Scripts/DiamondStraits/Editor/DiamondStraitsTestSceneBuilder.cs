@@ -50,13 +50,15 @@ public static class DiamondStraitsTestSceneBuilder
         BuildDummy(dummyGroup.transform, "TestDummy_B", new Vector3(2.5f, 1.0f, 7f));
         BuildDummy(dummyGroup.transform, "TestDummy_C", new Vector3(-2.5f, 1.0f, 7f));
 
+        // スポーン地点(0,1.05,0)からプレイヤーが振り向かずに見える前方(+Z側)へ、
+        // テストNPC(X=-2.5〜2.5, Z=5〜7)を避けて左右に振り分けて置く。
         GameObject existingDesk = GameObject.Find("GunDesk");
         if (existingDesk != null) Object.DestroyImmediate(existingDesk);
-        BuildGunDesk(new Vector3(-2f, 0.5f, -2f));
+        BuildGunDesk(new Vector3(-5f, 0.5f, 3f));
 
         GameObject existingTank = GameObject.Find("MiniTank");
         if (existingTank != null) Object.DestroyImmediate(existingTank);
-        BuildMiniTank(new Vector3(5f, 1.0f, -3f));
+        BuildMiniTank(new Vector3(5f, 1.0f, 3f));
 
         Selection.activeGameObject = playerRoot;
         Debug.Log("✅ [Diamond Straits] 麻酔コア検証シーンを構築しました。\n" +
