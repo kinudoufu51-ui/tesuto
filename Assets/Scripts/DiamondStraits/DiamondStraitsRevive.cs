@@ -44,7 +44,19 @@ public class DiamondStraitsRevive : MonoBehaviour, IFPSInteractable
 
     public void OnInteract(UniversalFPSController player)
     {
-        condition.Revive(IsMedic(player) ? 0f : squadReviveResidualSedation);
+        float residual = IsMedic(player) ? 0f : squadReviveResidualSedation;
+
+        // ネットワーク越しの相手なら、結果を本人のオーナーへ RPC で伝える必要がある。
+        // ローカルの検証ダミー(DiamondStraitsNetworkPlayer を持たない)には直接 Revive() でよい。
+        DiamondStraitsNetworkPlayer netTarget = GetComponent<DiamondStraitsNetworkPlayer>();
+        if (netTarget != null)
+        {
+            netTarget.RequestRevive(residual);
+        }
+        else
+        {
+            condition.Revive(residual);
+        }
     }
 
     private bool IsMedic(UniversalFPSController player)

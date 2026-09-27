@@ -18,6 +18,8 @@ public class DiamondStraitsLoadoutMenu : MonoBehaviour
     public int equipSlotIndex = 1;
 
     public KeyCode closeKey = KeyCode.Escape;
+    [Tooltip("ガンデスクに近づかなくても開けるデバッグ用のキー。物理デスクの無いシーンでの検証用。")]
+    public KeyCode openKey = KeyCode.B;
 
     public bool IsOpen { get; private set; }
 
@@ -64,6 +66,7 @@ public class DiamondStraitsLoadoutMenu : MonoBehaviour
     void Update()
     {
         if (IsOpen && Input.GetKeyDown(closeKey)) Close();
+        else if (!IsOpen && Input.GetKeyDown(openKey)) Open();
     }
 
     void OnGUI()

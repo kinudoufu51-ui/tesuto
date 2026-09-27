@@ -116,4 +116,26 @@ public class DiamondStraitsSoldierCondition : MonoBehaviour
         if (controller != null) controller.enabled = true;
         OnRevived?.Invoke();
     }
+
+    /// <summary>
+    /// ネットワーク越しの本人の値を表示専用で反映する。DiamondStraitsNetworkPlayer が
+    /// 非所有者側(=他人から見た相手)の毎フレーム呼ぶ想定で、ここから被弾やタイマーは起動しない。
+    /// 本人の状態変化はあくまで本人のクライアントの ApplySedation/Revive が真実になる。
+    /// </summary>
+    public void SyncFromNetwork(float sedation, bool asleep, float depthSeconds)
+    {
+        Sedation = Mathf.Clamp(sedation, 0f, 100f);
+        SedationDepthSeconds = depthSeconds;
+
+        if (asleep && !IsAsleep)
+        {
+            IsAsleep = true;
+            OnEnterSleep?.Invoke();
+        }
+        else if (!asleep && IsAsleep)
+        {
+            IsAsleep = false;
+            OnRevived?.Invoke();
+        }
+    }
 }
