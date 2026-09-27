@@ -19,6 +19,15 @@ public class FPSWeaponData : ScriptableObject
     [Tooltip("命中一発の重さ。被弾側の状態システムがこれを負傷量に変換する。散弾は1粒あたりの値なので低くする。")]
     public float hitImpact = 1.0f;
 
+    [Header("6. 麻酔仕様 (Diamond Straits: Skirmish)")]
+    [Tooltip("この武器の1発が与える麻酔蓄積(0-100換算)。昏睡命中数から逆算する(例: 3発で昏睡なら100/3)。")]
+    public float sedationPerHit = 25f;
+    [Tooltip("被弾者が100%に達した後、拠点から再出撃できるまでの強制ロック秒数。")]
+    public float forcedRespawnLockSeconds = 16f;
+    [Tooltip("かすった程度(100%未満)でも一定時間だけ移動・視点を鈍らせる範囲デバフ。LMG/SG向け。")]
+    public bool hasDrowsyDebuff = false;
+    public float drowsyDebuffSeconds = 3f;
+
     [Header("2. 第1層：実カメラリコイル (BF4初弾倍率 × BFVバレル一致)")]
     public float firstShotMultiplier = 2.0f;
     public float realRecoilPitch = 1.2f;
