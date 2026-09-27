@@ -54,6 +54,7 @@ public static class DiamondStraitsConquestSceneBuilder
                   "・チケットが0になった陣営の敗北です。左上のHUDで戦況を確認してください。\n" +
                   "・眠っている相手には近づいてEで蘇生できます(看護兵1.2秒/それ以外3.5〜6.0秒、Kキーで兵科切替)。\n" +
                   "・突撃兵でGキー → 麻酔グレネード投擲。援護兵でGキー → 簡易バリケード設置(高さ0.90m、飛び越え可能)。\n" +
+                  "  看護兵でGキー → 狙った味方に興奮剤(移動・装填25%速く)。斥候兵でGキー → グラップリングフック。\n" +
                   "・Bキーで武器ロッカーを開けます(物理デスクはまだ未配置)。先に「全48丁の武器カタログを生成」していれば、\n" +
                   "  選んだ兵科の武器だけに絞り込まれます。\n" +
                   "・「MiniTank」はEast拠点(企画書のアーケード拠点)を占領している陣営だけが乗降できます。未占領/敵占領中は\n" +
@@ -173,6 +174,8 @@ public static class DiamondStraitsConquestSceneBuilder
         DiamondStraitsGadgetController gadgetController = soldier.AddComponent<DiamondStraitsGadgetController>();
         gadgetController.assaultGadget = soldier.AddComponent<SedationGrenadeGadget>();
         gadgetController.supportGadget = soldier.AddComponent<BarricadeGadget>();
+        gadgetController.medicGadget = soldier.AddComponent<StimulantInjectorGadget>();
+        gadgetController.reconGadget = soldier.AddComponent<GrapplingHookGadget>();
 
         Camera soldierCam = soldier.GetComponentInChildren<Camera>();
         if (soldierCam != null) soldierCam.gameObject.AddComponent<DiamondStraitsScreenEffect>();

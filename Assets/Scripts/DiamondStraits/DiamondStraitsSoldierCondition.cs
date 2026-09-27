@@ -37,8 +37,8 @@ public class DiamondStraitsSoldierCondition : MonoBehaviour
     /// <summary>照準のブレ倍率。麻酔が回るほど狙いが定まらなくなる。</summary>
     public float AimSwayMultiplier => 1f + (Sedation / 100f) * 1.2f;
 
-    /// <summary>移動速度の倍率。ふらつく脚で全力疾走はできない。</summary>
-    public float MoveSpeedMultiplier => Mathf.Clamp(1f - (Sedation / 100f) * 0.5f, 0.4f, 1f);
+    /// <summary>移動速度の倍率。ふらつく脚で全力疾走はできない上に、興奮剤があればそれを上乗せする。</summary>
+    public float MoveSpeedMultiplier => Mathf.Clamp(1f - (Sedation / 100f) * 0.5f, 0.4f, 1f) * stimulantSpeedMultiplier;
 
     /// <summary>手の震え。上限を設けないと満量近くで銃口が暴れて何も狙えなくなる。</summary>
     public float HandTremor => Mathf.Min(1.2f, Mathf.Pow(Sedation / 100f, 2f) * 1.1f);
@@ -47,6 +47,11 @@ public class DiamondStraitsSoldierCondition : MonoBehaviour
     public float Breathlessness => Mathf.Clamp01((Sedation / 100f) - 0.4f);
 
     private UniversalFPSController controller;
+
+    // --- 看護兵の興奮剤注射器(企画書 §4)。時間が来たら自動的に等倍へ戻る一時バフ ---
+    private float stimulantSpeedMultiplier = 1f;
+    private float stimulantReloadTimeMultiplier = 1f;
+    private float stimulantEndTime = -1f;
 
     void Awake()
     {
@@ -65,6 +70,13 @@ public class DiamondStraitsSoldierCondition : MonoBehaviour
 
     void Update()
     {
+        if (stimulantEndTime > 0f && Time.time >= stimulantEndTime)
+        {
+            stimulantSpeedMultiplier = 1f;
+            stimulantReloadTimeMultiplier = 1f;
+            stimulantEndTime = -1f;
+        }
+
         if (controller != null) PushToController();
     }
 
@@ -78,6 +90,7 @@ public class DiamondStraitsSoldierCondition : MonoBehaviour
         controller.conditionSpeedMultiplier = MoveSpeedMultiplier;
         controller.conditionTremor = HandTremor;
         controller.conditionBreathlessness = Breathlessness;
+        controller.conditionReloadTimeMultiplier = stimulantReloadTimeMultiplier;
     }
 
     private void HandleDamageTaken(Vector3 incomingDir, float intensity)
@@ -115,6 +128,20 @@ public class DiamondStraitsSoldierCondition : MonoBehaviour
         Sedation = Mathf.Clamp(sedationAfterRevive, 0f, 99f);
         if (controller != null) controller.enabled = true;
         OnRevived?.Invoke();
+    }
+
+    /// <summary>
+    /// 看護兵の興奮剤注射器から呼ばれる。移動・装填速度を一定時間だけ底上げする。
+    /// speedMultiplier/reloadSpeedMultiplier はどちらも「1.25倍速くなる」のようにそのまま渡せばよく、
+    /// 装填側は内部で「時間の倍率」に変換する(装填が速い=時間は短い=倍率は1未満)。
+    /// </summary>
+    public void ApplyStimulant(float speedMultiplier, float reloadSpeedMultiplier, float duration)
+    {
+        if (IsAsleep) return;
+
+        stimulantSpeedMultiplier = speedMultiplier;
+        stimulantReloadTimeMultiplier = 1f / Mathf.Max(0.01f, reloadSpeedMultiplier);
+        stimulantEndTime = Time.time + duration;
     }
 
     /// <summary>

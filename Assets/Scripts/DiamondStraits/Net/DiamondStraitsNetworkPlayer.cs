@@ -219,4 +219,23 @@ public class DiamondStraitsNetworkPlayer : NetworkBehaviour
     {
         ReportHitServerRpc(amount, lockSeconds);
     }
+
+    /// <summary>看護兵の興奮剤注射器から、味方本人へバフを届ける入口。</summary>
+    public void RequestStimulant(float speedMultiplier, float reloadSpeedMultiplier, float duration)
+    {
+        StimulantServerRpc(speedMultiplier, reloadSpeedMultiplier, duration);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void StimulantServerRpc(float speedMultiplier, float reloadSpeedMultiplier, float duration)
+    {
+        StimulantClientRpc(speedMultiplier, reloadSpeedMultiplier, duration);
+    }
+
+    [ClientRpc]
+    private void StimulantClientRpc(float speedMultiplier, float reloadSpeedMultiplier, float duration)
+    {
+        if (!IsOwner) return;
+        condition.ApplyStimulant(speedMultiplier, reloadSpeedMultiplier, duration);
+    }
 }
