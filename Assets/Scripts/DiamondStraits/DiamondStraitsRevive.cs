@@ -9,7 +9,7 @@ using UnityEngine;
 ///
 /// FPSInteractionSystem は対象1体につき IFPSInteractable を1つしか拾わないため、
 /// 「誰が起こすか」で長押し時間と結果を分岐する形でこの1コンポーネントにまとめている。
-/// 兵科選択(フェーズ4)が入るまでは DiamondStraitsMedicTag の有無で仮に判定する。
+/// 看護兵かどうかは DiamondStraitsClassSelection.IsMedic で判定する。
 /// </summary>
 [RequireComponent(typeof(DiamondStraitsSoldierCondition))]
 public class DiamondStraitsRevive : MonoBehaviour, IFPSInteractable
@@ -61,8 +61,8 @@ public class DiamondStraitsRevive : MonoBehaviour, IFPSInteractable
 
     private bool IsMedic(UniversalFPSController player)
     {
-        DiamondStraitsMedicTag tag = player.GetComponent<DiamondStraitsMedicTag>();
-        return tag != null && tag.isMedic;
+        DiamondStraitsClassSelection selection = player.GetComponent<DiamondStraitsClassSelection>();
+        return selection != null && selection.IsMedic;
     }
 
     private float SquadHoldDuration()

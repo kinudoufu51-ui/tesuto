@@ -5,13 +5,13 @@ using UnityEngine;
 ///
 /// Resources 以下の FPSWeaponData を全部拾って並べるだけなので、今はテスト用の6丁しかなくても、
 /// 技術仕様書 §5 の48丁カタログが Resources/Weapons/DiamondStraits 以下に増えたときこのスクリプトは
-/// 変更なしでそのまま拾ってくれる。兵科ごとの絞り込み(フェーズ4)は資産の置き場所を分けて
-/// resourcesFolder を兵科別に切り替えるだけで対応できる。
+/// 変更なしでそのまま拾ってくれる。DiamondStraitsClassSelection で兵科が選ばれていれば、
+/// その兵科の primaryWeapons だけに絞り込む(未選択なら Resources 全体を並べる従来動作)。
 /// </summary>
 [RequireComponent(typeof(UniversalFPSController))]
 public class DiamondStraitsLoadoutMenu : MonoBehaviour
 {
-    [Tooltip("この階層以下の FPSWeaponData を全部メニューに並べる。空なら Resources 全体から拾う。")]
+    [Tooltip("この階層以下の FPSWeaponData を全部メニューに並べる。空なら Resources 全体から拾う。兵科が選ばれている場合はそちらを優先する。")]
     public string resourcesFolder = "";
 
     [Tooltip("選んだ武器を入れるスロット番号。既定の1は素体の初期装備スロットに合わせている。")]
@@ -24,6 +24,7 @@ public class DiamondStraitsLoadoutMenu : MonoBehaviour
     public bool IsOpen { get; private set; }
 
     private UniversalFPSController controller;
+    private DiamondStraitsClassSelection classSelection;
     private FPSWeaponData[] catalog = new FPSWeaponData[0];
     private Vector2 scroll;
     private GUIStyle titleStyle;
@@ -34,13 +35,17 @@ public class DiamondStraitsLoadoutMenu : MonoBehaviour
     void Awake()
     {
         controller = GetComponent<UniversalFPSController>();
+        classSelection = GetComponent<DiamondStraitsClassSelection>();
     }
 
     public void Open()
     {
         if (IsOpen) return;
 
-        catalog = Resources.LoadAll<FPSWeaponData>(resourcesFolder);
+        SoldierClassData selectedClass = classSelection != null ? classSelection.currentClass : null;
+        catalog = (selectedClass != null && selectedClass.primaryWeapons != null && selectedClass.primaryWeapons.Length > 0)
+            ? selectedClass.primaryWeapons
+            : Resources.LoadAll<FPSWeaponData>(resourcesFolder);
 
         IsOpen = true;
         controller.enabled = false;

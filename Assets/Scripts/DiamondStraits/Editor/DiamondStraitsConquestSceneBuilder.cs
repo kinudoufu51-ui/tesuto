@@ -46,8 +46,25 @@ public static class DiamondStraitsConquestSceneBuilder
                   "・接続順に陣営A/Bへ振り分けられます(偶数番がA、奇数番がB)。スポーン地点はまだ仮で、原点付近に散らばるだけです。\n" +
                   "・4つの拠点(N/E/S/W)は片方の陣営だけが滞在すると占領が進み、占領した拠点は相手のチケットを削ります。\n" +
                   "・チケットが0になった陣営の敗北です。左上のHUDで戦況を確認してください。\n" +
-                  "・眠っている相手には近づいてEで蘇生できます(看護兵1.2秒/分隊員3.5〜6.0秒、Kキーで役割切替)。\n" +
-                  "・Bキーで武器ロッカーを開けます(物理デスクはまだ未配置)。");
+                  "・眠っている相手には近づいてEで蘇生できます(看護兵1.2秒/それ以外3.5〜6.0秒、Kキーで兵科切替)。\n" +
+                  "・Bキーで武器ロッカーを開けます(物理デスクはまだ未配置)。先に「全48丁の武器カタログを生成」していれば、\n" +
+                  "  選んだ兵科の武器だけに絞り込まれます。");
+    }
+
+    /// <summary>
+    /// DiamondStraitsWeaponCatalogBuilder が生成した4兵科分の SoldierClassData を拾う。
+    /// まだ生成していなければ空配列を返し、Kキーでの兵科切り替えは単に何も起きないだけにする。
+    /// </summary>
+    private static SoldierClassData[] LoadClassRoster()
+    {
+        string root = "Assets/Resources/DiamondStraits/Classes";
+        var classes = new System.Collections.Generic.List<SoldierClassData>();
+        foreach (SoldierClass classType in System.Enum.GetValues(typeof(SoldierClass)))
+        {
+            SoldierClassData data = AssetDatabase.LoadAssetAtPath<SoldierClassData>($"{root}/{classType}.asset");
+            if (data != null) classes.Add(data);
+        }
+        return classes.ToArray();
     }
 
     /// <summary>
@@ -135,7 +152,10 @@ public static class DiamondStraitsConquestSceneBuilder
         soldier.AddComponent<DiamondStraitsSoldierCondition>();
         soldier.AddComponent<DiamondStraitsRevivalController>();
         soldier.AddComponent<DiamondStraitsRevive>();
-        soldier.AddComponent<DiamondStraitsMedicTag>();
+
+        DiamondStraitsClassSelection classSelection = soldier.AddComponent<DiamondStraitsClassSelection>();
+        classSelection.debugCycleClasses = LoadClassRoster();
+
         soldier.AddComponent<DiamondStraitsZzzOverlay>();
 
         DiamondStraitsLoadoutMenu loadoutMenu = soldier.AddComponent<DiamondStraitsLoadoutMenu>();

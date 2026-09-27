@@ -24,7 +24,9 @@ public static class DiamondStraitsTestSceneBuilder
         playerRoot.AddComponent<DiamondStraitsSoldierCondition>();
         playerRoot.AddComponent<DiamondStraitsRevivalController>();
         playerRoot.AddComponent<DiamondStraitsLocalHitRouter>();
-        playerRoot.AddComponent<DiamondStraitsMedicTag>();
+
+        DiamondStraitsClassSelection classSelection = playerRoot.AddComponent<DiamondStraitsClassSelection>();
+        classSelection.debugCycleClasses = LoadClassRoster();
 
         DiamondStraitsLoadoutMenu loadoutMenu = playerRoot.AddComponent<DiamondStraitsLoadoutMenu>();
         loadoutMenu.resourcesFolder = "FPSWeaponPresets";
@@ -46,12 +48,30 @@ public static class DiamondStraitsTestSceneBuilder
 
         Selection.activeGameObject = playerRoot;
         Debug.Log("✅ [Diamond Straits] 麻酔コア検証シーンを構築しました。\n" +
-                  "・武器(既存6プリセット)をテストNPCに向けて撃つと麻酔が蓄積し、満量で頭上に Zzz が出て動かなくなります。\n" +
-                  "・看護兵のまま(既定)Eを1.2秒長押し → 麻酔0%の万全状態で即復帰(ルート①)。\n" +
-                  "・Kキーで分隊員に切り替えてからEを長押し(3.5〜6.0秒、被弾銃が深いほど長い) → 麻酔50%の寝起き状態で復帰(ルート②)。\n" +
+                  "・武器(既存6プリセット、または先に「全48丁の武器カタログを生成」していればそちら)をテストNPCに撃つと麻酔が蓄積し、\n" +
+                  "  満量で頭上に Zzz が出て動かなくなります。\n" +
+                  "・Kキーで兵科を切り替えられます(未選択/看護兵の間はEを1.2秒長押しで麻酔0%の万全復帰=ルート①)。\n" +
+                  "・看護兵以外を選ぶとEの長押しが3.5〜6.0秒(被弾銃が深いほど長い)になり、麻酔50%の寝起き状態で復帰します(ルート②)。\n" +
                   "・Hキーで自分を被弾させると自分も眠ります。ロック秒数が経過すると自分にJキーで自然リスポーン(ルート③)、\n" +
                   "  さらに長く放置すると自動で自力覚醒します(ルート④)。\n" +
-                  "・スポーン地点そばの「GunDesk」に近づきEで武器ロッカーを開き、一覧から武器を選ぶと即座に持ち替わります。");
+                  "・スポーン地点そばの「GunDesk」に近づきEで武器ロッカーを開き、一覧から武器を選ぶと即座に持ち替わります" +
+                  "(兵科を選んでいればその兵科の武器だけに絞られます)。");
+    }
+
+    /// <summary>
+    /// DiamondStraitsWeaponCatalogBuilder が生成した4兵科分の SoldierClassData を拾う。
+    /// まだ生成していなければ空配列を返し、Kキーでの兵科切り替えは単に何も起きないだけにする。
+    /// </summary>
+    private static SoldierClassData[] LoadClassRoster()
+    {
+        string root = "Assets/Resources/DiamondStraits/Classes";
+        var classes = new System.Collections.Generic.List<SoldierClassData>();
+        foreach (SoldierClass classType in System.Enum.GetValues(typeof(SoldierClass)))
+        {
+            SoldierClassData data = AssetDatabase.LoadAssetAtPath<SoldierClassData>($"{root}/{classType}.asset");
+            if (data != null) classes.Add(data);
+        }
+        return classes.ToArray();
     }
 
     /// <summary>

@@ -19,7 +19,7 @@ public class DiamondStraitsNetworkPlayer : NetworkBehaviour
     private UniversalFPSController controller;
     private DiamondStraitsSoldierCondition condition;
     private DiamondStraitsRevivalController revivalController;
-    private DiamondStraitsMedicTag medicTag;
+    private DiamondStraitsClassSelection classSelection;
     private FPSInteractionSystem interaction;
     private FPSTelemetryAndDecals telemetry;
     private FPSProceduralAudio proceduralAudio;
@@ -47,7 +47,7 @@ public class DiamondStraitsNetworkPlayer : NetworkBehaviour
         controller = GetComponent<UniversalFPSController>();
         condition = GetComponent<DiamondStraitsSoldierCondition>();
         revivalController = GetComponent<DiamondStraitsRevivalController>();
-        medicTag = GetComponent<DiamondStraitsMedicTag>();
+        classSelection = GetComponent<DiamondStraitsClassSelection>();
         interaction = GetComponent<FPSInteractionSystem>();
         telemetry = GetComponent<FPSTelemetryAndDecals>();
         proceduralAudio = GetComponent<FPSProceduralAudio>();
@@ -83,7 +83,7 @@ public class DiamondStraitsNetworkPlayer : NetworkBehaviour
         controller.enabled = active;
         if (condition != null) condition.enabled = active;
         if (revivalController != null) revivalController.enabled = active;
-        if (medicTag != null) medicTag.enabled = active;
+        if (classSelection != null) classSelection.enabled = active;
         if (interaction != null) interaction.enabled = active;
         if (telemetry != null) telemetry.enabled = active;
         if (proceduralAudio != null) proceduralAudio.enabled = active;
