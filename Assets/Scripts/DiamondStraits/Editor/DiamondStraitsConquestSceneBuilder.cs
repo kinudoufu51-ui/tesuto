@@ -56,8 +56,7 @@ public static class DiamondStraitsConquestSceneBuilder
                   "・Bキーで武器ロッカーを開けます(物理デスクはまだ未配置)。先に「全48丁の武器カタログを生成」していれば、\n" +
                   "  選んだ兵科の武器だけに絞り込まれます。\n" +
                   "・「MiniTank」はEast拠点(企画書のアーケード拠点)を占領している陣営だけが乗降できます。未占領/敵占領中は\n" +
-                  "  乗降口が反応しません。豆戦車の物理はホストのローカルシミュレーションのみで、クライアント間の\n" +
-                  "  位置同期はまだ実装していません(基礎実装のスコープ外)。");
+                  "  乗降口が反応しません。操縦手が乗ると所有権がその人に移り、位置が他クライアントへ同期されます。");
     }
 
     /// <summary>
@@ -228,6 +227,12 @@ public static class DiamondStraitsConquestSceneBuilder
 
         MiniTankController controller = root.AddComponent<MiniTankController>();
         controller.deploymentGate = deploymentGate;
+
+        // コンクエスト(ネットワーク)シーン向けの位置同期。操縦手が乗るとその人へ所有権が移り、
+        // OwnerNetworkTransform が実際の物理をそのまま他クライアントへ伝える。
+        root.AddComponent<NetworkObject>();
+        root.AddComponent<OwnerNetworkTransform>();
+        root.AddComponent<MiniTankNetworkSync>();
 
         GameObject hullVisual = GameObject.CreatePrimitive(PrimitiveType.Cube);
         hullVisual.name = "HullVisual";

@@ -9,9 +9,9 @@ using UnityEngine;
 /// 含まれないもの(基礎実装のスコープ外): 背面吸気口への麻酔カウンター。ガジェット統合が
 /// 深く絡むため後回しにする。拠点占領による出撃制限(deploymentGate)は §出撃条件 参照。
 ///
-/// このコントローラー自身は Rigidbody をネットワーク同期しない。コンクエストの検証シーンに
-/// 置く場合も、車両の物理はホストのローカルシミュレーションのみが正になる — 複数クライアント
-/// 間で位置を一致させるには別途 NetworkTransform 等の統合が必要で、これは基礎実装の対象外。
+/// このコントローラー自身はネットワークを一切知らない。複数クライアント間の位置同期が要る場面
+/// (コンクエストの検証シーンなど)では、MiniTankNetworkSync を別途追加する。搭乗/降車の通知
+/// (OnDriverEntered/OnDriverExited)だけを公開し、あとはネットワーク側が勝手に所有権を動かす。
 ///
 /// 搭乗中は UniversalFPSController を丸ごと無効化するため、素体側のマウス視点操作も
 /// 一緒に止まってしまう。これを補うため、座席の Transform 自体をここで直接回転させて
@@ -70,6 +70,14 @@ public class MiniTankController : MonoBehaviour, IFPSInteractable
     public bool IsFlipped => Vector3.Dot(transform.up, Vector3.up) < uprightDotThreshold;
     public bool HasDriver => driver != null;
     public bool HasGunner => gunner != null;
+
+    /// <summary>
+    /// 操縦手の搭乗/降車の通知。ネットワーク同期(MiniTankNetworkSync)がこれを見て
+    /// NetworkObject の所有権を操縦手のクライアントへ移す/戻すために使う。
+    /// このコントローラー自身はネットワークを一切知らないので、通知するだけに留める。
+    /// </summary>
+    public System.Action<UniversalFPSController> OnDriverEntered;
+    public System.Action OnDriverExited;
 
     void Awake()
     {
@@ -215,6 +223,7 @@ public class MiniTankController : MonoBehaviour, IFPSInteractable
             driverOriginalCameraParent = originalParent;
             driverYaw = 0f;
             if (driverSeat != null) driverSeat.localRotation = Quaternion.identity;
+            OnDriverEntered?.Invoke(player);
         }
         else
         {
@@ -235,6 +244,7 @@ public class MiniTankController : MonoBehaviour, IFPSInteractable
         driver = null;
         driverCc = null;
         driverOriginalCameraParent = null;
+        OnDriverExited?.Invoke();
     }
 
     public void ExitGunner()
