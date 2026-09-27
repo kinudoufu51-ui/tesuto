@@ -4,6 +4,8 @@ using UnityEngine;
 /// 援護兵の簡易バリケード(企画書 §4)。高さ0.90mは素体の3段階自動段差乗り越えのうち
 /// 「腰高のカウンター(0.85〜0.95m)」に合わせてあり、前進ジャンプで飛び越えられる遮蔽物として
 /// 機能する(FPSWeaponData/UniversalFPSController の Vault 判定にそのまま乗る、追加コードは不要)。
+///
+/// 突撃兵のワイヤーカッター(BarricadeInteractable)が破壊できるよう、生成時に付与しておく。
 /// </summary>
 public class BarricadeGadget : MonoBehaviour, IDiamondStraitsGadget
 {
@@ -33,6 +35,7 @@ public class BarricadeGadget : MonoBehaviour, IDiamondStraitsGadget
         barricade.transform.position = position;
         barricade.transform.rotation = Quaternion.LookRotation(flatForward);
         barricade.transform.localScale = barricadeSize;
+        barricade.AddComponent<BarricadeInteractable>();
 
         Object.Destroy(barricade, lifetimeSeconds);
     }

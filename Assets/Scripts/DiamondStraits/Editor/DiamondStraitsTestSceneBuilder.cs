@@ -33,6 +33,7 @@ public static class DiamondStraitsTestSceneBuilder
 
         DiamondStraitsGadgetController gadgetController = playerRoot.AddComponent<DiamondStraitsGadgetController>();
         gadgetController.assaultGadgetPrimary = playerRoot.AddComponent<SedationGrenadeGadget>();
+        gadgetController.assaultGadgetSecondary = playerRoot.AddComponent<SmokeGrenadeGadget>();
         gadgetController.supportGadgetPrimary = playerRoot.AddComponent<BarricadeGadget>();
         gadgetController.medicGadgetPrimary = playerRoot.AddComponent<StimulantInjectorGadget>();
         gadgetController.medicGadgetSecondary = playerRoot.AddComponent<AntidoteSprayGadget>();
@@ -62,8 +63,9 @@ public static class DiamondStraitsTestSceneBuilder
                   "・武器(既存6プリセット、または先に「全48丁の武器カタログを生成」していればそちら)をテストNPCに撃つと麻酔が蓄積し、\n" +
                   "  満量で頭上に Zzz が出て動かなくなります。\n" +
                   "・Kキーで兵科を切り替えられます(未選択/看護兵の間はEを1.2秒長押しで麻酔0%の万全復帰=ルート①)。\n" +
-                  "・突撃兵でGキー → 麻酔グレネード投擲(15秒CD)。援護兵でGキー → 簡易バリケード設置\n" +
-                  "  (20秒CD、高さ0.90mなので前進ジャンプで飛び越えられます)。\n" +
+                  "・突撃兵でGキー → 麻酔グレネード投擲(15秒CD)。Vキー → 煙幕手榴弾(実体の煙玉、視界も弾道も遮ります、20秒CD)。\n" +
+                  "・援護兵でGキー → 簡易バリケード設置(20秒CD、高さ0.90mなので前進ジャンプで飛び越えられます)。\n" +
+                  "  突撃兵はバリケードにEを1.0秒長押しでワイヤーカッター破壊できます。\n" +
                   "・看護兵でGキー → 狙った味方に興奮剤(移動・装填25%速く、15秒、20秒CD)。\n" +
                   "  Vキー → 周囲5m以内の眠っている味方を麻酔0%でまとめて起こす解毒スプレー(30秒CD)。\n" +
                   "・斥候兵でGキー → 狙った先までグラップリングフックで一気に引き寄せられます(12秒CD)。\n" +

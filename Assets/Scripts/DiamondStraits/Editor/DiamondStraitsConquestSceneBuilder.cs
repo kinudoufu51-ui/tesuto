@@ -53,7 +53,8 @@ public static class DiamondStraitsConquestSceneBuilder
                   "・4つの拠点(N/E/S/W)は片方の陣営だけが滞在すると占領が進み、占領した拠点は相手のチケットを削ります。\n" +
                   "・チケットが0になった陣営の敗北です。左上のHUDで戦況を確認してください。\n" +
                   "・眠っている相手には近づいてEで蘇生できます(看護兵1.2秒/それ以外3.5〜6.0秒、Kキーで兵科切替)。\n" +
-                  "・突撃兵でGキー → 麻酔グレネード投擲。援護兵でGキー → 簡易バリケード設置(高さ0.90m、飛び越え可能)。\n" +
+                  "・突撃兵でGキー → 麻酔グレネード投擲、Vキー → 煙幕手榴弾(視界も弾道も遮る実体の煙玉)。\n" +
+                  "  援護兵でGキー → 簡易バリケード設置(高さ0.90m、飛び越え可能。突撃兵はEでワイヤーカッター破壊可)。\n" +
                   "  看護兵でGキー → 狙った味方に興奮剤(移動・装填25%速く)、Vキー → 周囲の味方を一斉蘇生する解毒スプレー。\n" +
                   "  斥候兵でGキー → グラップリングフック。\n" +
                   "・Bキーで武器ロッカーを開けます(物理デスクはまだ未配置)。先に「全48丁の武器カタログを生成」していれば、\n" +
@@ -174,6 +175,7 @@ public static class DiamondStraitsConquestSceneBuilder
 
         DiamondStraitsGadgetController gadgetController = soldier.AddComponent<DiamondStraitsGadgetController>();
         gadgetController.assaultGadgetPrimary = soldier.AddComponent<SedationGrenadeGadget>();
+        gadgetController.assaultGadgetSecondary = soldier.AddComponent<SmokeGrenadeGadget>();
         gadgetController.supportGadgetPrimary = soldier.AddComponent<BarricadeGadget>();
         gadgetController.medicGadgetPrimary = soldier.AddComponent<StimulantInjectorGadget>();
         gadgetController.medicGadgetSecondary = soldier.AddComponent<AntidoteSprayGadget>();
