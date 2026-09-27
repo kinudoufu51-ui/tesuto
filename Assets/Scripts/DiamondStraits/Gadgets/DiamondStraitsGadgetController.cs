@@ -1,28 +1,33 @@
 using UnityEngine;
 
 /// <summary>
-/// Gキーでガジェットを使う入口。兵科ごとに使えるガジェットが違う(企画書 §4)ので、
+/// ガジェットを使う入口。兵科ごとに使えるガジェットが違う(企画書 §4)ので、
 /// DiamondStraitsClassSelection.currentClass を見て、今どれを使うべきかをその場で決める。
 ///
-/// 基礎実装では兵科につき1種類だけ(突撃兵=麻酔グレネード、援護兵=簡易バリケード、
-/// 看護兵=興奮剤注射器、斥候兵=グラップリングフック)。看護兵の蘇生キットは既存の
-/// DiamondStraitsRevive(インタラクト)がその役を果たしているのでここには含めない。
-/// 偵察カメラ・煙幕手榴弾・ワイヤーカッター・偽装ネットなど残りのガジェットは未実装。
+/// 兵科につき2枠(主=Gキー、副=Vキー)まで。看護兵の蘇生キットは既存の DiamondStraitsRevive
+/// (インタラクト)がその役を果たしているのでここには含めない。偵察カメラ・煙幕手榴弾・
+/// ワイヤーカッター・弾薬補給ボックス・センサー地雷・偽装ネットは未実装(各兵科3枠目)。
 /// </summary>
 [RequireComponent(typeof(UniversalFPSController))]
 public class DiamondStraitsGadgetController : MonoBehaviour
 {
-    public KeyCode useKey = KeyCode.G;
+    public KeyCode primaryUseKey = KeyCode.G;
+    public KeyCode secondaryUseKey = KeyCode.V;
 
     [Tooltip("MonoBehaviour かつ IDiamondStraitsGadget を実装したコンポーネントを割り当てる。")]
-    public MonoBehaviour assaultGadget;
-    public MonoBehaviour supportGadget;
-    public MonoBehaviour medicGadget;
-    public MonoBehaviour reconGadget;
+    public MonoBehaviour assaultGadgetPrimary;
+    public MonoBehaviour assaultGadgetSecondary;
+    public MonoBehaviour supportGadgetPrimary;
+    public MonoBehaviour supportGadgetSecondary;
+    public MonoBehaviour medicGadgetPrimary;
+    public MonoBehaviour medicGadgetSecondary;
+    public MonoBehaviour reconGadgetPrimary;
+    public MonoBehaviour reconGadgetSecondary;
 
     private UniversalFPSController controller;
     private DiamondStraitsClassSelection classSelection;
-    private float nextUseTime;
+    private float nextPrimaryUseTime;
+    private float nextSecondaryUseTime;
 
     void Awake()
     {
@@ -32,16 +37,26 @@ public class DiamondStraitsGadgetController : MonoBehaviour
 
     void Update()
     {
-        if (!Input.GetKeyDown(useKey) || Time.time < nextUseTime) return;
+        if (Input.GetKeyDown(primaryUseKey) && Time.time >= nextPrimaryUseTime)
+        {
+            TryUse(ResolveGadget(primary: true), ref nextPrimaryUseTime);
+        }
 
-        IDiamondStraitsGadget gadget = ResolveGadget();
+        if (Input.GetKeyDown(secondaryUseKey) && Time.time >= nextSecondaryUseTime)
+        {
+            TryUse(ResolveGadget(primary: false), ref nextSecondaryUseTime);
+        }
+    }
+
+    private void TryUse(IDiamondStraitsGadget gadget, ref float nextUseTime)
+    {
         if (gadget == null) return;
 
         gadget.Use(controller);
         nextUseTime = Time.time + gadget.CooldownSeconds;
     }
 
-    private IDiamondStraitsGadget ResolveGadget()
+    private IDiamondStraitsGadget ResolveGadget(bool primary)
     {
         SoldierClass? classType = (classSelection != null && classSelection.currentClass != null)
             ? classSelection.currentClass.classType
@@ -49,10 +64,10 @@ public class DiamondStraitsGadgetController : MonoBehaviour
 
         MonoBehaviour candidate = classType switch
         {
-            SoldierClass.Assault => assaultGadget,
-            SoldierClass.Support => supportGadget,
-            SoldierClass.Medic => medicGadget,
-            SoldierClass.Recon => reconGadget,
+            SoldierClass.Assault => primary ? assaultGadgetPrimary : assaultGadgetSecondary,
+            SoldierClass.Support => primary ? supportGadgetPrimary : supportGadgetSecondary,
+            SoldierClass.Medic => primary ? medicGadgetPrimary : medicGadgetSecondary,
+            SoldierClass.Recon => primary ? reconGadgetPrimary : reconGadgetSecondary,
             _ => null,
         };
 

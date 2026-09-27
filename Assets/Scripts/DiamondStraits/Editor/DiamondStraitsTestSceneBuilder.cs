@@ -32,10 +32,11 @@ public static class DiamondStraitsTestSceneBuilder
         loadoutMenu.resourcesFolder = "FPSWeaponPresets";
 
         DiamondStraitsGadgetController gadgetController = playerRoot.AddComponent<DiamondStraitsGadgetController>();
-        gadgetController.assaultGadget = playerRoot.AddComponent<SedationGrenadeGadget>();
-        gadgetController.supportGadget = playerRoot.AddComponent<BarricadeGadget>();
-        gadgetController.medicGadget = playerRoot.AddComponent<StimulantInjectorGadget>();
-        gadgetController.reconGadget = playerRoot.AddComponent<GrapplingHookGadget>();
+        gadgetController.assaultGadgetPrimary = playerRoot.AddComponent<SedationGrenadeGadget>();
+        gadgetController.supportGadgetPrimary = playerRoot.AddComponent<BarricadeGadget>();
+        gadgetController.medicGadgetPrimary = playerRoot.AddComponent<StimulantInjectorGadget>();
+        gadgetController.medicGadgetSecondary = playerRoot.AddComponent<AntidoteSprayGadget>();
+        gadgetController.reconGadgetPrimary = playerRoot.AddComponent<GrapplingHookGadget>();
 
         Camera playerCam = playerRoot.GetComponentInChildren<Camera>();
         if (playerCam != null) playerCam.gameObject.AddComponent<DiamondStraitsScreenEffect>();
@@ -64,7 +65,8 @@ public static class DiamondStraitsTestSceneBuilder
                   "・突撃兵でGキー → 麻酔グレネード投擲(15秒CD)。援護兵でGキー → 簡易バリケード設置\n" +
                   "  (20秒CD、高さ0.90mなので前進ジャンプで飛び越えられます)。\n" +
                   "・看護兵でGキー → 狙った味方に興奮剤(移動・装填25%速く、15秒、20秒CD)。\n" +
-                  "  斥候兵でGキー → 狙った先までグラップリングフックで一気に引き寄せられます(12秒CD)。\n" +
+                  "  Vキー → 周囲5m以内の眠っている味方を麻酔0%でまとめて起こす解毒スプレー(30秒CD)。\n" +
+                  "・斥候兵でGキー → 狙った先までグラップリングフックで一気に引き寄せられます(12秒CD)。\n" +
                   "・看護兵以外を選ぶとEの長押しが3.5〜6.0秒(被弾銃が深いほど長い)になり、麻酔50%の寝起き状態で復帰します(ルート②)。\n" +
                   "・Hキーで自分を被弾させると自分も眠ります。ロック秒数が経過すると自分にJキーで自然リスポーン(ルート③)、\n" +
                   "  さらに長く放置すると自動で自力覚醒します(ルート④)。\n" +
